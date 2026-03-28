@@ -167,3 +167,22 @@ We construct a **clean benchmark dataset**:
 * RNA-targeted drug generation
 
 ---
+
+# 📖 Citation
+
+If you find this work useful, please consider citing:
+
+```bibtex
+```
+
+---
+
+
+# 📬 Contact
+
+For questions about the paper, please contact:
+
+```
+leideng@csu.edu.cn
+wumin@a-star.edu.sg
+```
