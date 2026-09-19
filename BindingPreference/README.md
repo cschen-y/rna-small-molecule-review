@@ -1,20 +1,20 @@
-# RNA–小分子 Binding Preference 方法复现说明
+# Reproducing RNA–Small-Molecule Binding-Preference Methods
 
-本文档整理 RNA–小分子 binding preference / affinity 方法，包括 **BioLLMNet、DeepRSMA、RSAPred、RLaffinity、RLASIF、SPRank、RNAmigos、R-BIND、RNALigands 和 ZHMol-RLinter**。内容包括论文与源代码入口、数据来源和运行步骤；对当前缺少可执行源码的方法，仅说明阻塞原因。
+This document covers RNA–small-molecule binding-preference and binding-affinity methods, including **BioLLMNet, DeepRSMA, RSAPred, RLaffinity, RLASIF, SPRank, RNAmigos, R-BIND, RNALigands, and ZHMol-RLinter**. It provides links to the papers and source code, data sources, and execution steps. When executable source code is currently unavailable, only the specific reason that prevents reproduction is described.
 
-> 核对日期：2026-09-17。公开仓库和下载链接可能后续发生变化。
+> Last verified: 2026-09-17. Public repositories and download links may change after this date.
 
 ## 1. BioLLMNet
 
-- 论文：[BioLLMNet: a multimodal framework for RNA-centric interaction prediction using large language model embeddings](https://doi.org/10.1093/bib/bbaf549)
-- 源码：[abrarrahmanabir/BioLLMNet](https://github.com/abrarrahmanabir/BioLLMNet)
-- 数据：[作者提供的预处理数据](https://drive.google.com/drive/folders/1qDX5u_5BgptB0Ah5o4-uEF91oSV4-7ci?usp=sharing)
-- 主要入口：`rna_molecule_run.py`
-- 评估入口：`rna_molecule_eval.py`
+- Paper: [BioLLMNet: a multimodal framework for RNA-centric interaction prediction using large language model embeddings](https://doi.org/10.1093/bib/bbaf549)
+- Source code: [abrarrahmanabir/BioLLMNet](https://github.com/abrarrahmanabir/BioLLMNet)
+- Data: [preprocessed data provided by the authors](https://drive.google.com/drive/folders/1qDX5u_5BgptB0Ah5o4-uEF91oSV4-7ci?usp=sharing)
+- Main entry point: `rna_molecule_run.py`
+- Evaluation entry point: `rna_molecule_eval.py`
 
-作者提供的数据已经包含 RiNALMo RNA 表示、MoleBERT 小分子表示和标签，训练脚本本身不负责从原始 RNA/SMILES 重新生成 embedding。RNA–小分子 CSV 需要包含 `Compound`、`Protein` 和 `Label` 列，同时需要 RNA embedding 与 drug embedding 的 pickle 文件。
+The author-provided data already contain RiNALMo RNA representations, MoleBERT small-molecule representations, and labels. The training script does not regenerate embeddings from raw RNA sequences or SMILES strings. The RNA–small-molecule CSV file must contain `Compound`, `Protein`, and `Label` columns. RNA-embedding and drug-embedding pickle files are also required.
 
-### 运行
+### Run
 
 ```bash
 git clone https://github.com/abrarrahmanabir/BioLLMNet.git
@@ -24,41 +24,41 @@ conda create -n biollmnet python=3.10 -y
 conda activate biollmnet
 pip install torch pandas numpy scikit-learn
 
-# 从上面的 Google Drive 下载 RNA_Molecule 数据并解压。
-# 修改 rna_molecule_run.py 底部的 train_files，明确填写：
-# 1. RNA embedding pickle
-# 2. drug embedding pickle
-# 3. interaction CSV
+# Download the RNA_Molecule data from the Google Drive link above and extract it.
+# At the end of rna_molecule_run.py, edit train_files and explicitly specify:
+# 1. the RNA-embedding pickle file
+# 2. the drug-embedding pickle file
+# 3. the interaction CSV file
 python rna_molecule_run.py
 ```
 
-脚本执行 10 折交叉验证，并在 `final_results/` 下写出结果和权重。评估时还需要修改 `rna_molecule_eval.py` 中的 `CODE_DIR`，使验证数据和模型文件名与本地输出一致：
+The script performs 10-fold cross-validation and writes results and weights under `final_results/`. For evaluation, edit `CODE_DIR` in `rna_molecule_eval.py` so that the validation data and model filenames match the local outputs:
 
 ```bash
 python rna_molecule_eval.py
 ```
 
-运行前必须把 `rna_molecule_run.py` 末尾作者机器上的 Windows 绝对路径替换成本地路径。三个输入文件应逐一明确指定，不要依赖目录中文件的排序。运行评估脚本前，还要把 `rna_molecule_eval.py` 中的 `CODE_DIR` 改为实际结果目录。
+Before running, replace the absolute Windows paths from the authors' machine at the end of `rna_molecule_run.py` with local paths. Specify the three input files explicitly rather than relying on directory ordering. Before running the evaluation script, also change `CODE_DIR` in `rna_molecule_eval.py` to the actual result directory.
 
 ## 2. DeepRSMA
 
-- 论文：[DeepRSMA: a deep learning model for RNA–small molecule activity prediction](https://doi.org/10.1093/bioinformatics/btae678)
-- 源码：[Hhhzj-7/DeepRSMA](https://github.com/Hhhzj-7/DeepRSMA)
-- 数据：仓库中的 `data/`
-- 交叉验证入口：`main_cv.py`
-- 盲测入口：`main_blind.py`
-- 独立测试入口：`main_independent.py`
+- Paper: [DeepRSMA: a deep learning model for RNA–small molecule activity prediction](https://doi.org/10.1093/bioinformatics/btae678)
+- Source code: [Hhhzj-7/DeepRSMA](https://github.com/Hhhzj-7/DeepRSMA)
+- Data: `data/` in the repository
+- Cross-validation entry point: `main_cv.py`
+- Blind-test entry point: `main_blind.py`
+- Independent-test entry point: `main_independent.py`
 
-仓库已包含原始数据、预计算 RNA 表示、RNA contact 信息和预处理脚本。若要从头生成 RNA 特征，需要额外使用 [RNA-FM](https://github.com/ml4bio/RNA-FM) 和 [SPOT-RNA-2D](https://github.com/jaswindersingh2/SPOT-RNA-2D)。仅复现实验时，可优先使用仓库中已提供的表示和 contact 数据。
+The repository includes raw data, precomputed RNA representations, RNA contact information, and preprocessing scripts. Generating RNA features from scratch additionally requires [RNA-FM](https://github.com/ml4bio/RNA-FM) and [SPOT-RNA-2D](https://github.com/jaswindersingh2/SPOT-RNA-2D). To reproduce the reported experiments, the representations and contact data already provided in the repository can be used directly.
 
-### 运行
+### Run
 
 ```bash
 git clone https://github.com/Hhhzj-7/DeepRSMA.git
 cd DeepRSMA
 conda env create -f environment.yml
 
-# 查看 environment.yml 第一行的 name，并激活该环境。
+# Read the name on the first line of environment.yml and activate that environment.
 conda activate <environment-name>
 
 python main_cv.py
@@ -66,18 +66,18 @@ python main_blind.py
 python main_independent.py
 ```
 
-建议把三种任务的输出分别保存，并额外记录随机种子、GPU 型号、CUDA/PyTorch 版本和 commit SHA。论文实验使用多 GPU；若改成单 GPU，需要预期训练时间明显增加。
+Save outputs from the three tasks separately. Also record the random seed, GPU model, CUDA and PyTorch versions, and commit SHA. The experiments in the paper use multiple GPUs. Training on a single GPU can take substantially longer.
 
 ## 3. RSAPred
 
-- 论文：[RSAPred: a machine learning approach for predicting RNA–small molecule binding affinity](https://doi.org/10.1093/bib/bbae002)
-- 源码：[Sowmya-R-Krishnan/RSAPred](https://github.com/Sowmya-R-Krishnan/RSAPred)
-- Web 服务及数据下载：[RSAPred prediction page](https://web.iitm.ac.in/bioinfo2/RSAPred/Predict.html)
-- 原始 RNA–小分子相互作用数据库：[R-SIM](https://web.iitm.ac.in/bioinfo2/R_SIM/)
+- Paper: [RSAPred: a machine learning approach for predicting RNA–small molecule binding affinity](https://doi.org/10.1093/bib/bbae002)
+- Source code: [Sowmya-R-Krishnan/RSAPred](https://github.com/Sowmya-R-Krishnan/RSAPred)
+- Web server and data download: [RSAPred prediction page](https://web.iitm.ac.in/bioinfo2/RSAPred/Predict.html)
+- Original RNA–small-molecule interaction database: [R-SIM](https://web.iitm.ac.in/bioinfo2/R_SIM/)
 
-RSAPred 是传统描述符与线性回归方法。仓库包含样例数据和各阶段脚本；完整训练/测试数据应从作者网站或 R-SIM 获取。README 要求 Python 3.8+，主要依赖包括 pandas、NumPy、SciPy、scikit-learn、sklearn-genetic、Mordred、Open Babel 和 ViennaRNA。
+RSAPred combines conventional descriptors with linear-regression models. The repository contains sample data and scripts for each processing stage. Complete training and test data should be obtained from the authors' website or R-SIM. The repository README requires Python 3.8 or later. Major dependencies include pandas, NumPy, SciPy, scikit-learn, sklearn-genetic, Mordred, Open Babel, and ViennaRNA.
 
-### 安装
+### Install
 
 ```bash
 git clone https://github.com/Sowmya-R-Krishnan/RSAPred.git
@@ -87,16 +87,16 @@ conda activate rsapred
 pip install -r requirements.txt
 ```
 
-Open Babel 和 ViennaRNA 通常更适合通过 conda-forge 安装；若 `pip install -r requirements.txt` 在这两个包处失败，可使用：
+Open Babel and ViennaRNA are generally easier to install from conda-forge. If `pip install -r requirements.txt` fails on either package, use:
 
 ```bash
 conda install -c conda-forge openbabel viennarna -y
 pip install -r requirements.txt
 ```
 
-### 数据预处理
+### Data preprocessing
 
-以下命令应在仓库对应的 data preprocessing 目录执行；路径名称以克隆后的实际 README 为准。
+Run the following commands from the corresponding data-preprocessing directories in the repository. Confirm the directory names against the README in the cloned version.
 
 ```bash
 python calc_kmer_composition_features_v1.py "./data/rna_data.csv" "./sample_output/"
@@ -124,10 +124,10 @@ python create_dataset_v1.py \
   "./sample_output/Final_sample_dataset_v1.csv"
 ```
 
-### 特征选择、交叉验证和外部测试
+### Feature selection, cross-validation, and external testing
 
 ```bash
-# <nfeat> 为目标特征数，<output_path> 为输出目录。
+# <nfeat> is the target number of features, and <output_path> is the output directory.
 python -u ffs_final.py \
   "./data/Final_sample_dataset_v1.csv" \
   "./data/Pairwise_featcorr_0.8.pkl" \
@@ -144,18 +144,18 @@ python test_on_regression_dataset.py \
   "test_results.csv"
 ```
 
-仓库各子目录的 README 还提供 RFECV、遗传算法、LOO-CV 和分类外部测试命令。复现时应严格记录所使用的 RNA subtype、特征数和最佳模型日志。仓库 README 同时写有“仅限学术使用”的说明；商业使用或再次分发前应联系作者确认，即使仓库中另有许可证文件也不要忽略该限制。
+README files in the repository's subdirectories also provide commands for RFECV, genetic algorithms, leave-one-out cross-validation, and external classification tests. Record the RNA subtype, number of features, and best-model log used for each run. The repository README also states that the software is for academic use only. Contact the authors before commercial use or redistribution, even if the repository contains a separate license file.
 
 ## 4. RLaffinity
 
-- 论文：[RLaffinity: a deep learning model for RNA–ligand binding affinity prediction](https://doi.org/10.1093/bioinformatics/btae155)
-- 源码：[SaisaiSun/RLaffinity](https://github.com/SaisaiSun/RLaffinity)
-- 主要目录：`3dcnn_lba/`
-- 数据：PDBbind NL2020 中的核酸–配体复合物；仓库提供清洗标签、训练/验证/测试列表和部分模型输出
+- Paper: [RLaffinity: a deep learning model for RNA–ligand binding affinity prediction](https://doi.org/10.1093/bioinformatics/btae155)
+- Source code: [SaisaiSun/RLaffinity](https://github.com/SaisaiSun/RLaffinity)
+- Main directory: `3dcnn_lba/`
+- Data: nucleic-acid–ligand complexes from PDBbind NL2020; the repository provides cleaned labels, training/validation/test lists, and selected model outputs
 
-RLaffinity 需要受体和配体的三维结构。仓库中可见 `data/train_list.txt`、`data/val_list.txt`、`data/test_list.txt`、`data/input_label/pdbbind_NL_cleaned.csv` 以及训练得到的权重，但原始 PDBbind 结构仍需按 PDBbind 的授权方式自行取得。
+RLaffinity requires three-dimensional receptor and ligand structures. The repository contains `data/train_list.txt`, `data/val_list.txt`, `data/test_list.txt`, `data/input_label/pdbbind_NL_cleaned.csv`, and trained weights. The original PDBbind structures must still be obtained under the PDBbind access terms.
 
-### 运行
+### Run
 
 ```bash
 git clone https://github.com/SaisaiSun/RLaffinity.git
@@ -165,36 +165,36 @@ conda create -n rlaffinity python=3.9 -y
 conda activate rlaffinity
 pip install torch numpy pandas scipy tqdm biopython
 
-# 运行以下命令核对当前 commit 的参数名和输入格式。
+# Use these commands to verify argument names and input formats in the current commit.
 python process_pdbbind.py --help
 python prepare_lmdb.py --help
 python train.py --help
 
-# 1. 预处理三维结构。
+# 1. Preprocess the three-dimensional structures.
 python process_pdbbind.py <receptor_dir> <ligand_dir> --out_dir <processed_dir>
 
-# 2. 生成对比预训练使用的 LMDB。
+# 2. Generate the LMDB used for contrastive pretraining.
 python prepare_lmdb.py <processed_dir> <pretrain_lmdb>
 python trainstage1.py
 
-# 3. 生成有监督数据。
+# 3. Generate the supervised dataset.
 python prepare_lmdb.py <processed_dir> <supervised_lmdb> -s \
   --train_txt data/train_list.txt \
   --val_txt data/val_list.txt \
   --test_txt data/test_list.txt \
   --score_path data/input_label/pdbbind_NL_cleaned.csv
 
-# 4. 训练/评估。
+# 4. Train or evaluate the model.
 python train.py --data_dir data --mode test --output_dir output_train
 ```
 
-对新复合物预测时，先以相同步骤处理结构并生成测试 LMDB，再执行：
+For a new complex, process the structures and generate a test LMDB with the same procedure, then run:
 
 ```bash
 python test.py --data_dir data --output_dir output_test
 ```
 
-PDBbind 原始结构需要按其授权方式自行取得。GitHub 仓库中只记录下载与预处理步骤，不应直接提交受限的原始结构。由于官方仓库没有锁定依赖版本，首次成功运行后应立即导出实际环境：
+The original PDBbind structures must be obtained under the applicable access terms. A GitHub repository should document the download and preprocessing procedure rather than redistribute restricted structures. The official repository does not pin dependency versions. Export the working environment immediately after the first successful run:
 
 ```bash
 conda env export --no-builds > environment.yml
@@ -202,35 +202,35 @@ conda env export --no-builds > environment.yml
 
 ## 5. RLASIF
 
-- 论文：[RLASIF: RNA–ligand affinity prediction based on surface interaction fingerprints](https://doi.org/10.1016/j.compbiolchem.2025.108367)
-- 当前可找到的仓库：[ZUSTSTTLAB/RLASIF](https://github.com/ZUSTSTTLAB/RLASIF)
-- 数据：论文使用 PDBbind NL2020 派生的 RNA–配体结构数据；综述的统一比较使用 95 个复合物的 affinity 子集
+- Paper: [RLASIF: RNA–ligand affinity prediction based on surface interaction fingerprints](https://doi.org/10.1016/j.compbiolchem.2025.108367)
+- Currently discoverable repository: [ZUSTSTTLAB/RLASIF](https://github.com/ZUSTSTTLAB/RLASIF)
+- Data: RNA–ligand structures derived from PDBbind NL2020; the comparison in the review uses an affinity subset of 95 complexes
 
-### 无法运行的原因
+### Why the method cannot currently be run
 
-当前公开仓库中的核心 `RLASIF` 条目只是 Git 子模块指针，但仓库没有提供 `.gitmodules` 中的子模块 URL，因此无法取得真正的模型源码。仓库其余内容主要是 macOS 元数据，也没有可用的 README、环境文件、数据预处理脚本、训练入口、数据划分或预训练权重。缺少这些文件时无法构造可验证的运行命令，需要作者补充完整仓库或固定 commit 的源码归档。
+The core `RLASIF` entry in the public repository is only a Git submodule pointer, but the repository does not provide the submodule URL in `.gitmodules`. The actual model source code therefore cannot be retrieved. The remaining repository content consists mainly of macOS metadata and does not include a usable README, environment file, preprocessing scripts, training entry point, data split, or pretrained weights. A verifiable execution command cannot be constructed without a complete repository or a source archive tied to a fixed commit from the authors.
 
 ## 6. SPRank
 
-- 论文：[SPRank: a knowledge-based scoring function for RNA–ligand complexes](https://doi.org/10.1021/acs.jctc.4c00681)
-- 论文全文与补充材料：[PubMed Central](https://pmc.ncbi.nlm.nih.gov/articles/PMC12960052/)
-- 论文声明的源码地址：`https://github.com/Vfold-RNA/SPRank`
+- Paper: [SPRank: a knowledge-based scoring function for RNA–ligand complexes](https://doi.org/10.1021/acs.jctc.4c00681)
+- Full text and supporting information: [PubMed Central](https://pmc.ncbi.nlm.nih.gov/articles/PMC12960052/)
+- Source-code URL reported in the paper: `https://github.com/Vfold-RNA/SPRank`
 
-### 无法运行的原因
+### Why the method cannot currently be run
 
-论文声明的源码地址 `https://github.com/Vfold-RNA/SPRank` 在核对日期返回 404，因而无法取得 SPRank standalone 程序、特征与统计势文件、随机森林权重、依赖版本或命令行说明。论文补充材料可以确认训练集和测试集组成，但不能代替缺失的程序与模型文件。虽然论文描述了使用 rDock/AutoDock Vina 生成候选构象并用 SPRank 评分的流程，但仅凭方法描述无法写出可验证的运行命令，需要作者恢复仓库或提供源码归档。
+The reported source-code URL, `https://github.com/Vfold-RNA/SPRank`, returned 404 on the verification date. The standalone SPRank program, feature and statistical-potential files, random-forest weights, dependency versions, and command-line instructions are therefore unavailable. The supporting information identifies the training and test sets but cannot replace the missing program and model files. Although the paper describes generating candidate poses with rDock or AutoDock Vina and scoring them with SPRank, that description alone is insufficient to construct a verifiable command. The authors would need to restore the repository or provide a source archive.
 
 ## 7. RNAmigos
 
-- 论文：[Augmented base pairing networks encode RNA-small molecule binding preferences](https://doi.org/10.1093/nar/gkaa583)
-- 源码：[cgoliver/RNAmigos](https://github.com/cgoliver/RNAmigos)
-- 论文数据：[Zenodo 8338267](https://zenodo.org/records/8338267)
-- 训练入口：`learning/main.py`
-- 自定义结构推理入口：`inference.py`
+- Paper: [Augmented base pairing networks encode RNA-small molecule binding preferences](https://doi.org/10.1093/nar/gkaa583)
+- Source code: [cgoliver/RNAmigos](https://github.com/cgoliver/RNAmigos)
+- Paper data: [Zenodo 8338267](https://zenodo.org/records/8338267)
+- Training entry point: `learning/main.py`
+- Custom-structure inference entry point: `inference.py`
 
-RNAmigos 将已知 RNA binding pocket 表示成带有 canonical 和 non-canonical base-pair 类型的图，并预测候选配体的 MACCS fingerprint。输入结构必须只包含已经确定的 pocket residues；该程序本身不负责寻找 binding site。
+RNAmigos represents a known RNA binding pocket as a graph with canonical and noncanonical base-pair types and predicts the MACCS fingerprint of a candidate ligand. An input structure must contain only previously identified pocket residues. The program does not locate the binding site itself.
 
-### 环境与论文数据
+### Environment and paper data
 
 ```bash
 git clone https://github.com/cgoliver/RNAmigos.git
@@ -246,56 +246,56 @@ mv pockets_nx_symmetric_orig annotated/
 cd ..
 ```
 
-仓库中的 `environment.yml` 固定了旧版 Python 3.6、PyTorch 1.5.1 和 DGL 0.4.3。为避免旧代码与新版 DGL/PyTorch API 不兼容，应先使用作者环境，不要直接升级核心依赖。Zenodo 提供清理后的论文训练/验证数据和 decoy 集合；运行其中的 `make_nice.py` 可以生成 `rnamigos1_dataset.csv`。
+The repository's `environment.yml` pins Python 3.6, PyTorch 1.5.1, and DGL 0.4.3. Use the authors' environment first because the old code is incompatible with parts of the current DGL and PyTorch APIs. Zenodo provides the cleaned training and validation data and decoy sets used in the paper. Running `make_nice.py` from that archive produces `rnamigos1_dataset.csv`.
 
-### 训练
+### Train
 
 ```bash
 python learning/main.py \
   -da pockets_nx_symmetric_orig \
   -n rnamigos_reproduction
 
-# 查看全部训练参数。
+# Display all training arguments.
 python learning/main.py -h
 ```
 
-模型和日志保存在 `-n` 指定的运行目录中。
+Models and logs are saved in the run directory specified with `-n`.
 
-### 对自定义 RNA pocket 推理
+### Infer on a custom RNA pocket
 
 ```bash
 mkdir -p data/my_pdbs data/my_graphs
 
-# 将仅包含目标 binding pocket residues 的 .cif 文件放入 data/my_pdbs/。
-# 按 inference.py 中的示例用 rnaglib 的 fr3d_to_graph 生成图并执行模型。
+# Place a .cif file containing only the target binding-pocket residues in data/my_pdbs/.
+# Follow the inference.py example to generate a graph with rnaglib's fr3d_to_graph and run the model.
 python inference.py
 ```
 
-输出是预测的 MACCS fingerprint 概率。使用候选小分子库进行筛选时，需要另外计算候选分子的 MACCS fingerprint，再按照仓库示例进行相似度排序。
+The output is a vector of predicted MACCS-fingerprint probabilities. To screen a small-molecule library, calculate MACCS fingerprints for the candidate molecules separately and rank them by similarity as illustrated in the repository.
 
 ## 8. R-BIND
 
-- 论文：[R-BIND: An Interactive Database for Exploring and Developing RNA-Targeted Chemical Probes](https://doi.org/10.1021/acschembio.9b00631)
-- 更新版论文：[R-BIND 2.0](https://doi.org/10.1021/acschembio.2c00224)
-- 数据库与在线检索：[R-BIND](https://rbind.chem.duke.edu/)
-- R-BIND 2.0 数据表：[论文全文和 Supporting Information](https://pmc.ncbi.nlm.nih.gov/articles/PMC9343015/)
+- Paper: [R-BIND: An Interactive Database for Exploring and Developing RNA-Targeted Chemical Probes](https://doi.org/10.1021/acschembio.9b00631)
+- Updated paper: [R-BIND 2.0](https://doi.org/10.1021/acschembio.2c00224)
+- Database and online search: [R-BIND](https://rbind.chem.duke.edu/)
+- R-BIND 2.0 data tables: [full paper and Supporting Information](https://pmc.ncbi.nlm.nih.gov/articles/PMC9343015/)
 
-### 无法运行表中 UNK96 比较的原因
+### Why the UNK96 comparison in the table cannot currently be run
 
-R-BIND 本身是数据库和在线 cheminformatics 检索平台，不是带有公开命令行入口的独立预测软件。R-BIND 论文公开了数据库内容、20 个化学描述符以及在线 nearest-neighbor search 的原理，R-BIND 2.0 的 Supporting Information 也提供 `RBIND_v2.0_A.xlsx` 和 `RBIND_v2.0_B.xlsx`，但没有公开网站后端源码、固定版本的特征计算脚本或环境文件。
+R-BIND is a database and an online cheminformatics search platform rather than a standalone prediction package with a public command-line entry point. The R-BIND paper describes the database content, 20 chemical descriptors, and the online nearest-neighbor search. The Supporting Information for R-BIND 2.0 provides `RBIND_v2.0_A.xlsx` and `RBIND_v2.0_B.xlsx`, but the website back-end source code, a fixed-version feature-calculation script, and an environment specification are not public.
 
-图中 UNK96 表格使用的是针对该测试集的 ligand ranking 流程。当前公开材料没有提供该比较所用的 UNK96 输入文件、预处理映射、完整候选库和可执行评分脚本，因此不能从 R-BIND 网站或数据表直接重建表中的数值。仅根据论文描述重新编写相似度算法属于重新实现，而不是运行原作者代码。
+The UNK96 table in the review uses a ligand-ranking workflow specific to that test set. The public materials do not provide the UNK96 input files, preprocessing map, complete candidate library, or executable scoring script used for that comparison. The reported values therefore cannot be reconstructed directly from the R-BIND website or data tables. Rewriting a similarity-ranking algorithm from the paper would be a reimplementation, not execution of the authors' code.
 
 ## 9. RNALigands
 
-- 论文：[RNALigands: a database and web server for RNA-ligand interactions](https://doi.org/10.1261/rna.078889.121)
-- 源码：[SaisaiSun/RNALigands](https://github.com/SaisaiSun/RNALigands)
-- 数据：仓库 `Package/` 中的 motif-ligand 数据文件、替换矩阵和示例
-- 入口：`Package/run.pl`
+- Paper: [RNALigands: a database and web server for RNA-ligand interactions](https://doi.org/10.1261/rna.078889.121)
+- Source code: [SaisaiSun/RNALigands](https://github.com/SaisaiSun/RNALigands)
+- Data: motif–ligand data files, substitution matrices, and examples under `Package/` in the repository
+- Entry point: `Package/run.pl`
 
-RNALigands 从 RNA 序列或 dot-bracket 二级结构中提取 hairpin、internal、bulge 和 multibranch loop motif，然后在 PDB、R-BIND 和 miRBase 派生的数据中搜索相似 motif 及其配体。代码使用 Perl、ViennaRNA 命令行工具和 Unix 文件命令，建议在 Linux 或 WSL 中运行。
+RNALigands extracts hairpin, internal, bulge, and multibranch-loop motifs from an RNA sequence or dot-bracket secondary structure. It then searches for similar motifs and associated ligands in data derived from PDB, R-BIND, and miRBase. The code uses Perl, the ViennaRNA command-line tools, and Unix file commands and should be run on Linux or WSL.
 
-### 环境与运行
+### Environment and execution
 
 ```bash
 git clone https://github.com/SaisaiSun/RNALigands.git
@@ -305,30 +305,30 @@ conda create -n rnaligands -c conda-forge perl viennarna -y
 conda activate rnaligands
 chmod +x *.pl
 
-# 必须先把 run.pl 中硬编码的
+# First replace the hard-coded path in run.pl:
 # /var/www/rnaligands/ViennaRNA/bin/RNAfold
-# 改为当前环境中的 RNAfold。
+# with the RNAfold executable in the current environment.
 which RNAfold
 
-# 使用 FASTA，让 RNAfold 生成二级结构后执行 motif 搜索。
+# Use a FASTA file and let RNAfold generate the secondary structure before motif searching.
 perl run.pl -f example/1ddy_A.fasta
 
-# 如果已经有 dot-bracket 二级结构，可直接使用 -s。
+# If a dot-bracket secondary structure is already available, use -s directly.
 perl run.pl -s example/1ddy_A_dot.txt
 ```
 
-必须从 `Package/` 目录执行命令，因为 `run.pl` 使用当前工作目录定位其余 Perl 脚本和数据库文件。输出写入输入示例所在目录。若直接在 Windows PowerShell 中运行，脚本中的 Unix `cp`、路径和可执行权限处理会失败，因此应使用 WSL/Linux。
+Run the command from the `Package/` directory because `run.pl` locates the other Perl scripts and database files relative to the current working directory. Output is written to the directory containing the input example. Direct execution in Windows PowerShell fails because the script depends on the Unix `cp` command, Unix path behavior, and executable permissions. Use WSL or Linux.
 
 ## 10. ZHMol-RLinter
 
-- 论文：[A Machine Learning Method for RNA-Small Molecule Binding Preference Prediction](https://doi.org/10.1021/acs.jcim.4c01324)
-- 原论文数据：[ACS Supporting Information](https://pubs.acs.org/doi/10.1021/acs.jcim.4c01324)
-- 后续公开的推理代码与模型：[Zenodo 17157778](https://doi.org/10.5281/zenodo.17157778)
-- Zenodo 文件：`ZHMol-RLinter_on_TAR.tar`
+- Paper: [A Machine Learning Method for RNA-Small Molecule Binding Preference Prediction](https://doi.org/10.1021/acs.jcim.4c01324)
+- Data from the original paper: [ACS Supporting Information](https://pubs.acs.org/doi/10.1021/acs.jcim.4c01324)
+- Inference code and models released later: [Zenodo 17157778](https://doi.org/10.5281/zenodo.17157778)
+- Zenodo file: `ZHMol-RLinter_on_TAR.tar`
 
-原论文的 Supporting Information 提供 RNA-small molecule database、RL98、UNK96 和 PC40 的数据表及实验结果，但没有发布完整训练仓库。作者在后续研究中公开了 ZHMol-RLinter 的 TAR inhibitor inference 示例、随机森林 `.mat` 模型和部分特征生成脚本。
+The Supporting Information for the original paper provides data tables and experimental results for the RNA–small-molecule database, RL98, UNK96, and PC40, but no complete training repository was released. In a later study, the authors published TAR-inhibitor inference examples, random-forest `.mat` models, and selected feature-generation scripts for ZHMol-RLinter.
 
-### 运行公开的 TAR 推理示例
+### Run the public TAR inference example
 
 ```bash
 curl -L \
@@ -341,45 +341,45 @@ cd ZHMol-RLinter_on_TAR/example_TAR_110FA
 matlab -batch "test_TAR"
 ```
 
-其他已准备好的示例目录包括 `example_TAR_115FA`、`example_TAR_AM6538`、`example_TAR_DB00594` 和 `example_TAR_F07#13`。每个目录已经包含 feature 表、随机森林模型和 `test_TAR.m`；预测结果写入该目录的 `predict_result/scores_motif.xlsx`。运行这些示例需要 MATLAB 及 Statistics and Machine Learning Toolbox。
+Other prepared example directories include `example_TAR_115FA`, `example_TAR_AM6538`, `example_TAR_DB00594`, and `example_TAR_F07#13`. Each directory contains a feature table, a random-forest model, and `test_TAR.m`. Predictions are written to `predict_result/scores_motif.xlsx` in the corresponding directory. Running these examples requires MATLAB and the Statistics and Machine Learning Toolbox.
 
-### 为新输入准备特征
+### Prepare features for a new input
 
-归档 README 给出的流程是：
+The workflow described in the archive README is:
 
-1. 用 [MXfold2](https://github.com/mxfold/mxfold2) 预测 RNA 二级结构，并从 PDB 中提取 loop motif。
-2. 用 `feature preparation/Laplacian Norm calculation/ln.pl` 计算 Laplacian norm。
-3. 用 `feature preparation/Physicochemical environment/PE_feature.py` 计算 physicochemical environment；该脚本需要 NumPy 和 Open Babel，并且必须先修改其中的输入、输出绝对路径。
-4. 在 MATLAB 中运行 `feature preparation/Network topology/Network_T.m`。
-5. 用 [GHECOM](https://pdbj.org/ghecom/) 提取 loop motif pocket。
-6. 用 `feature preparation/small molecule fingerprint/fingerprint.py` 生成 MACCS fingerprint；该脚本需要 RDKit，并且必须修改输入、输出路径。
-7. 按示例把 motif 与 ligand 特征合并为 188 维 `feature.xlsx`，再运行相应的 MATLAB 测试脚本。
+1. Predict RNA secondary structure with [MXfold2](https://github.com/mxfold/mxfold2) and extract loop motifs from a PDB structure.
+2. Calculate the Laplacian norm with `feature preparation/Laplacian Norm calculation/ln.pl`.
+3. Calculate the physicochemical environment with `feature preparation/Physicochemical environment/PE_feature.py`. This script requires NumPy and Open Babel, and its absolute input and output paths must be edited before use.
+4. Run `feature preparation/Network topology/Network_T.m` in MATLAB.
+5. Extract the loop-motif pocket with [GHECOM](https://pdbj.org/ghecom/).
+6. Generate a MACCS fingerprint with `feature preparation/small molecule fingerprint/fingerprint.py`. This script requires RDKit, and its input and output paths must be edited before use.
+7. Merge the motif and ligand features into the 188-dimensional `feature.xlsx` format shown in the examples, then run the corresponding MATLAB test script.
 
-### 无法完整重建原论文训练和 UNK96 测试的原因
+### Why the original training and UNK96 test cannot be fully reconstructed
 
-Zenodo 归档只包含 TAR 推理示例和特征准备脚本，没有随机森林训练程序，也没有 README 中提到的完整 `test_program/`、`test_UNK96_1.m` 及其输入目录。原论文 Supporting Information 提供的是数据表和结果，而不是这些缺失的程序。因此可以运行归档中的 TAR 示例，但无法用当前公开文件从头训练模型或严格重建论文中的 RL98/UNK96 实验。
+The Zenodo archive contains only TAR inference examples and feature-preparation scripts. It does not include the random-forest training program or the complete `test_program/`, `test_UNK96_1.m`, and input directories referenced in the README. The Supporting Information for the original paper provides data tables and results rather than the missing programs. The TAR examples can therefore be run, but the currently public files cannot train the model from scratch or strictly reconstruct the RL98 and UNK96 experiments reported in the paper.
 
-## 11. 运行时统一记录的元数据
+## 11. Metadata to Record for Every Run
 
-每个方法至少应记录：
+Record at least the following information for each method:
 
-- 原论文 DOI；
-- 官方仓库 URL 和实际使用的 commit SHA；
-- 数据集名称、下载日期、许可证/访问限制和原始文件校验值；
-- 训练、验证、测试划分文件；
-- Python、CUDA、PyTorch、RDKit/Open Babel、ViennaRNA 等版本；
-- 随机种子、训练轮数、批大小和硬件；
-- 原始命令、标准输出、错误日志、模型权重和最终指标；
-- 对官方代码所做的每一处修改。
+- DOI of the original paper;
+- official repository URL and the exact commit SHA used;
+- dataset name, download date, license or access restrictions, and source-file checksums;
+- training, validation, and test split files;
+- versions of Python, CUDA, PyTorch, RDKit or Open Babel, ViennaRNA, and other relevant dependencies;
+- random seeds, training epochs, batch size, and hardware;
+- original commands, standard output, error logs, model weights, and final metrics;
+- every modification made to the official code.
 
-建议每个项目至少提供 `environment.yml`（或锁定版本的 `requirements.txt`）、`run_train.*`、`run_test.*`、`data/README.md` 和 `results/README.md`。数据受许可证限制时，`data/README.md` 只保存来源、下载步骤和校验方式，不提交原始数据。
+Each project should provide at least an `environment.yml` or a version-pinned `requirements.txt`, `run_train.*`, `run_test.*`, `data/README.md`, and `results/README.md`. When a dataset is license-restricted, `data/README.md` should contain only its source, download procedure, and verification checksums rather than the original data.
 
-## 12. 与综述统一评测的关系
+## 12. Relationship to the Harmonized Evaluation in the Review
 
-这些方法并非使用完全相同的原始输入：
+These methods do not all use the same type of original input:
 
-- **序列/表示类**：RSAPred、DeepRSMA、BioLLMNet，综述中以 R-SIM 派生任务进行统一比较。
-- **三维结构类**：RLaffinity、RLASIF、SPRank，综述中以 PDBbind NL2020 派生的 95 个 RNA–配体复合物 affinity 集合进行比较。
-- **binding preference / ligand ranking 类**：RNAmigos、R-BIND、RNALigands 和 ZHMol-RLinter，图中的比较使用 UNK96；前三者按 top-10 ranking 判定，ZHMol-RLinter 按是否正确分类为 binding 判定。
+- **Sequence or representation methods**: RSAPred, DeepRSMA, and BioLLMNet. The review compares them on tasks derived from R-SIM.
+- **Three-dimensional structure methods**: RLaffinity, RLASIF, and SPRank. The review compares them using an affinity set of 95 RNA–ligand complexes derived from PDBbind NL2020.
+- **Binding-preference or ligand-ranking methods**: RNAmigos, R-BIND, RNALigands, and ZHMol-RLinter. The comparison in the review uses UNK96. The first three methods define success by top-10 ranking, whereas ZHMol-RLinter defines success by correct binding classification.
 
-因此，复现“原论文结果”和复现“综述中的统一测试结果”应作为两个独立任务。前者严格遵循各论文数据划分，后者必须额外建立一致的数据 ID、标签单位、去重规则和 train/validation/test 划分，不能直接比较各仓库默认输出。
+Reproducing the original-paper results and reproducing the harmonized evaluation in the review are therefore separate tasks. The former must follow the data split reported in each paper. The latter additionally requires consistent data identifiers, label units, deduplication rules, and training, validation, and test splits. Default outputs from different repositories should not be compared directly.
