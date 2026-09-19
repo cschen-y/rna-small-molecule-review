@@ -358,28 +358,3 @@ The workflow described in the archive README is:
 ### Why the original training and UNK96 test cannot be fully reconstructed
 
 The Zenodo archive contains only TAR inference examples and feature-preparation scripts. It does not include the random-forest training program or the complete `test_program/`, `test_UNK96_1.m`, and input directories referenced in the README. The Supporting Information for the original paper provides data tables and results rather than the missing programs. The TAR examples can therefore be run, but the currently public files cannot train the model from scratch or strictly reconstruct the RL98 and UNK96 experiments reported in the paper.
-
-## 11. Metadata to Record for Every Run
-
-Record at least the following information for each method:
-
-- DOI of the original paper;
-- official repository URL and the exact commit SHA used;
-- dataset name, download date, license or access restrictions, and source-file checksums;
-- training, validation, and test split files;
-- versions of Python, CUDA, PyTorch, RDKit or Open Babel, ViennaRNA, and other relevant dependencies;
-- random seeds, training epochs, batch size, and hardware;
-- original commands, standard output, error logs, model weights, and final metrics;
-- every modification made to the official code.
-
-Each project should provide at least an `environment.yml` or a version-pinned `requirements.txt`, `run_train.*`, `run_test.*`, `data/README.md`, and `results/README.md`. When a dataset is license-restricted, `data/README.md` should contain only its source, download procedure, and verification checksums rather than the original data.
-
-## 12. Relationship to the Harmonized Evaluation in the Review
-
-These methods do not all use the same type of original input:
-
-- **Sequence or representation methods**: RSAPred, DeepRSMA, and BioLLMNet. The review compares them on tasks derived from R-SIM.
-- **Three-dimensional structure methods**: RLaffinity, RLASIF, and SPRank. The review compares them using an affinity set of 95 RNA–ligand complexes derived from PDBbind NL2020.
-- **Binding-preference or ligand-ranking methods**: RNAmigos, R-BIND, RNALigands, and ZHMol-RLinter. The comparison in the review uses UNK96. The first three methods define success by top-10 ranking, whereas ZHMol-RLinter defines success by correct binding classification.
-
-Reproducing the original-paper results and reproducing the harmonized evaluation in the review are therefore separate tasks. The former must follow the data split reported in each paper. The latter additionally requires consistent data identifiers, label units, deduplication rules, and training, validation, and test splits. Default outputs from different repositories should not be compared directly.

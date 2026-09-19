@@ -188,16 +188,3 @@ dock6 -i dock.in -o dock.out
 ```
 
 The `dock.in`, `grid.in`, `INSPH`, and `showbox.in` files are receptor-specific and cannot be reused unchanged. Generate them from the current receptor, reference ligand, and paper-specific parameters. Final poses are commonly written in MOL2 format. Evaluate the highest-ranked pose with the same heavy-atom RMSD program used in the paper.
-
-## 10. Files to Record for Strict Reproduction
-
-For each runnable docking framework, save at least:
-
-- paper DOI, source-code URL, commit SHA or software version, and acquisition date;
-- PDB ID, checksums of the original downloads, and a structure-cleaning log;
-- receptor, reference-ligand, candidate-ligand, and pocket-definition files;
-- atom types, charges, protonation states, metal and water handling, and rotatable-bond settings;
-- complete configuration files, commands, standard output, error logs, and random seeds;
-- all output poses, raw scores, reranking results, and the version of the RMSD program.
-
-Scoring-function comparisons in the table should rerank the same candidate-pose set. Docking-framework comparisons should record the pose set generated independently by each framework. A success rate obtained with different candidate poses, pocket definitions, or success thresholds should not be compared directly with the tabulated value.

@@ -223,22 +223,3 @@ MVRBind models RNA primary, secondary, and tertiary structures as multiple views
 ```bash
 conda run --no-capture-output -n MVRBind python MVRBind/run_test17.py
 ```
-
-## 13. Interpreting the Results
-
-All methods report Accuracy, Precision, Recall, F1, MCC, AUC, AUPR, and BACC in a standardized format. Before comparison, check the training epochs, random seeds, model variant, and use of pretrained checkpoints recorded in each result JSON file.
-
-The saved one-epoch results for RLBind, RNABind, and MultiModRLBP only demonstrate that their pipelines execute successfully. They do not use the configurations reported in the papers. For a full rerun, omit `--epochs 1` and use the default training duration defined by each script. RNet and RNAsite use five configured seeds. MVRBind evaluates five pretrained checkpoints. RBind, Rsite, and Rsite2 use deterministic evaluation.
-
-## 14. GitHub Reproduction Records
-
-At minimum, record the following information when submitting results to GitHub:
-
-- DOI of the original paper, original source URL, commit SHA, and download date;
-- environment YAML, operating system, GPU, NVIDIA driver, and CUDA version;
-- PDB IDs, chain IDs, deduplication rules, and source-file checksums for Train60 and Test17;
-- random seeds, training epochs, batch size, learning rate, and pretrained-weight checksums;
-- complete commands, standard output, error logs, raw JSON files, and summary CSV files;
-- every modification made to the original authors' code.
-
-If data, weights, or third-party code are restricted by their original licenses, provide only their source, download procedure, and checksum instructions unless redistribution is explicitly permitted.
